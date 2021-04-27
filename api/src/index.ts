@@ -1,5 +1,5 @@
-import { ApolloServer } from "@autotelic/apollo-server-fastify";
-import fastify from "fastify";
+import { ApolloServer } from "apollo-server-express";
+import express from "express";
 import "reflect-metadata";
 import { buildSchema } from "type-graphql";
 import { CONFIG } from "./config";
@@ -24,7 +24,7 @@ async function main() {
     } mode`
   );
 
-  const app = fastify();
+  const app = express();
 
   const schema = await buildSchema({
     resolvers: [HelloResolver],
@@ -32,18 +32,14 @@ async function main() {
   });
 
   const server = new ApolloServer({ schema, tracing: !__PROD__ });
-  app.register(server.createHandler());
+  server.applyMiddleware({ app });
 
   app.get("/", (_, reply) => {
     reply.send("Hello world!");
   });
 
-  app.listen(CONFIG.PORT, CONFIG.HOST, (err, addr) => {
-    if (err) {
-      console.error("Listen error:", err);
-      return;
-    }
-    console.log("Listening on", addr);
+  app.listen(CONFIG.PORT, CONFIG.HOST, () => {
+    console.log(`Listening on http://${CONFIG.HOST}:${CONFIG.PORT}`);
   });
 }
 
