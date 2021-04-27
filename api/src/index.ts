@@ -1,5 +1,15 @@
+import { ApolloServer } from "@autotelic/apollo-server-fastify";
 import fastify from "fastify";
+import "reflect-metadata";
+import { buildSchema } from "type-graphql";
 import { CONFIG } from "./config";
+import { __PROD__ } from "./constants";
+import { HelloResolver } from "./resolvers/hello";
+
+function getMetadata(): { name: string; version: string } {
+  const data = (require("../package.json") as any) || {};
+  return { name: data.name || "Unknown", version: data.version || "0.0.0" };
+}
 
 async function main() {
   process.on("unhandledRejection", (e) => {
@@ -7,7 +17,22 @@ async function main() {
     process.exit(1);
   });
 
+  const { name, version } = getMetadata();
+  console.log(
+    `Starting ${name} v${version} in ${
+      __PROD__ ? "production" : "development"
+    } mode`
+  );
+
   const app = fastify();
+
+  const schema = await buildSchema({
+    resolvers: [HelloResolver],
+    validate: false,
+  });
+
+  const server = new ApolloServer({ schema, tracing: !__PROD__ });
+  app.register(server.createHandler());
 
   app.get("/", (_, reply) => {
     reply.send("Hello world!");
