@@ -38,7 +38,7 @@ async function main() {
     reply.send("Hello world!");
   });
 
-  app.listen(CONFIG.PORT, CONFIG.HOST, () => {
+  app.listen(Number(CONFIG.PORT), CONFIG.HOST, () => {
     console.log(`Listening on http://${CONFIG.HOST}:${CONFIG.PORT}`);
   });
 }
